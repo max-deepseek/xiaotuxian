@@ -1,6 +1,6 @@
 import httpInstance from "@/utils/http"
  
-export function getCategory() {
+export function getCategoryAPI() {
   // 这里的getCategory方法，得和main.js中的方法名一致
   return httpInstance({
     // 完整的URL是 http://pcapi-xiaotuxian-front-devtest.itheima.net/home/category/head
