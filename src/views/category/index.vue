@@ -1,4 +1,7 @@
 <template>
-  我是导航
-  
+  <div>分类页面</div>
 </template>
+
+<script setup>
+
+</script>
