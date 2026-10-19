@@ -1,39 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Login from '@/views/Login/index.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import Layout from '@/views/Layout/index.vue'
-import Category from '@/views/category/index.vue'
 import Home from '@/views/Home/index.vue'
-import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs'
-
+import Category from '@/views/Category/index.vue'
+import Login from '@/views/Login/index.vue'
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  // path和component对应关系的位置
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path:'/',
+      path: '/',
+      name: 'layout',
       component: Layout,
       children: [
         {
-          path: "",
+          path: '',
+          name: 'home',
           component: Home
         },
         {
-          path: "category",
+          path: 'category/:id',
+          name: 'category',
           component: Category
         }
       ]
     },
     {
-      path:'/login',
-      component: Login,
-      children: [
-        {
-          path: "",
-          component: Home
-        }
-      ]
-    }
-  ],
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
+
+  ]
 })
 
 export default router
