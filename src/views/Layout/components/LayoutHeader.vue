@@ -11,7 +11,7 @@
       </h1>
       <ul class="app-header-nav">
         <li class="home" v-for="item in CategoryStore.categoryList" :key = "item.id">
-          <RouterLink active-class="active" :to="`/caregory/${item.id}`">
+          <RouterLink active-class="active" :to="`/category/${item.id}`">
             {{ item.name }}
           </RouterLink>
         </li>
