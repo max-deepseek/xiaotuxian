@@ -4,6 +4,13 @@
   import { useRoute } from 'vue-router'
   import { onBeforeRouteUpdate } from 'vue-router'
   import GoodsItem from '@/views/Home/components/GoodsItem.vue'
+  import {useBanner} from './composables/useBanner.vue'
+
+  
+
+  // 使用useBanner方法获取bannerList
+  const {bannerList} = useBanner()
+  
   const categoryData = ref({})
   const route = useRoute()
   const getCategory = async (id = route.params.id) => {
@@ -18,21 +25,20 @@
     getCategory(to.params.id)
   })
 
-  // 获取banner
-  import { getBannerAPI } from '@/apis/home'
+  // // 获取banner
+  // import { getBannerAPI } from '@/apis/home'
 
-  const bannerList = ref([])
+  // const bannerList = ref([])
 
-  const getBanner = async () => {
-    const res = await getBannerAPI({
-      distributionSite:'2'
-    })
-    console.log(res)
-    bannerList.value = res.result
-  }
+  // const getBanner = async () => {
+  //   const res = await getBannerAPI({
+  //     distributionSite:'2'
+  //   })
+  //   console.log(res)
+  //   bannerList.value = res.result
+  // }
 
   onMounted(() => {
-    getBanner()
     // 这里的id是route从浏览器url获取的，让后你通过useRoute获取后再传给getCategory去获取数据给下面渲染
     getCategory(route.params.id)
   })
@@ -62,7 +68,7 @@
         <h3>全部分类</h3>
         <ul>
           <li v-for="i in categoryData.children" :key="i.id">
-            <RouterLink to="/">
+            <RouterLink :to="`/category/sub/${i.id}`">
               <img :src="i.picture" />
               <p>{{ i.name }}</p>
             </RouterLink>
