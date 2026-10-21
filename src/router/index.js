@@ -26,7 +26,7 @@ const router = createRouter({
         },
         {
           path: 'category/sub/:id',
-          name: 'subaCategory',
+          name: 'subCategory',
           component: SubCategory
         },
         {

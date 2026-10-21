@@ -16,6 +16,7 @@ onMounted(() => getGoods())
 <template>
   <div class="xtx-goods-page">
     <div class="container" v-if="goods.details">
+      <!-- 面包屑 -->
       <div class="bread-container">
         <el-breadcrumb separator=">">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
@@ -30,7 +31,7 @@ onMounted(() => getGoods())
             goods.categories[0].name
           }}
           </el-breadcrumb-item>
-          <el-breadcrumb-item>抓绒保暖，毛毛虫子儿童运动鞋</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ goods.name }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
       <!-- 商品信息 -->
@@ -122,7 +123,10 @@ onMounted(() => getGoods())
             </div>
             <!-- 24热榜+专题推荐 -->
             <div class="goods-aside">
-              <DetailHot />
+              <!-- 24小时热榜 -->
+              <DetailHot :type="1" />
+              <!-- 周热榜 -->
+              <DetailHot :type="2" />
             </div>
           </div>
         </div>
