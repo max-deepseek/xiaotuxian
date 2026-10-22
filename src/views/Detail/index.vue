@@ -2,15 +2,17 @@
 import { getDetail } from '@/apis/detail'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import ImageView from '@/componets/ImageView/index.vue'
 // ✅ 导入热榜组件
 import DetailHot from './components/DetailHot.vue'
+
 const goods = ref({})
 const route = useRoute()
+
 const getGoods = async () => {
   const res = await getDetail(route.params.id)
   goods.value = res.result
 }
+
 onMounted(() => getGoods())
 </script>
 
@@ -41,7 +43,7 @@ onMounted(() => getGoods())
           <div class="goods-info">
             <div class="media">
               <!-- 图片预览区 -->
-              <ImageView />
+              <XtxImageView />
               <!-- 统计数量 -->
               <ul class="goods-sales">
                 <li>
@@ -90,7 +92,7 @@ onMounted(() => getGoods())
                 </dl>
               </div>
               <!-- sku组件 -->
-
+              <XtxSku :goods="goods"/>
               <!-- 数据组件 -->
 
               <!-- 按钮组件 -->
