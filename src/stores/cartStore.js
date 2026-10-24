@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useUserStore } from './user'
 import { insertCartAPI,findNewCartListAPI } from '@/apis/cart'
+import useStore from 'element-plus/es/components/table/src/store/index.mjs'
 
 export const useCartStore = defineStore('cart', () => {
   

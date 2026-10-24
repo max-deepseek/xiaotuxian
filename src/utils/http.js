@@ -27,13 +27,14 @@ httpInstance.interceptors.request.use(config => {
 // axios响应拦截器
 httpInstance.interceptors.response.use(res => res.data, e => {
   const userStore = useUserStore()
-  // 统一错误提示
+  // 空值保护：网络错误/超时时 e.response 可能为 undefined
+  const msg = e.response?.data?.msg || e.message || '请求失败，请稍后重试'
   ElMessage({
     type: 'warning',
-    message: e.response.data.msg
+    message: msg
   })
-  // 401token拦截处理
-  if (e.response.status === 401) {
+  // 401token失效处理
+  if (e.response?.status === 401) {
     userStore.clearUserInfo()
     router.push('/login')
   }
