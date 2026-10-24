@@ -7,8 +7,8 @@
   const userInf0 = useUserStore()
   
   const form = ref({
-    account: '',
-    password: '',
+    account: 'xiaotuxian001',
+    password: '123456',
     agree: true
   })
 
@@ -78,10 +78,10 @@ const doLogin = () => {
             <el-form ref='formRef' :model="form" :rules="rules" label-position="right" label-width="60px"
               status-icon>
               <el-form-item prop="account" label="账户">
-                <el-input v-model="form.account" />
+                <el-input v-model="form.account" placeholder="xiaotuxian001"/>
               </el-form-item>
               <el-form-item prop="password" label="密码">
-                <el-input v-model="form.password"/>
+                <el-input v-model="form.password" placeholder="123456"/>
               </el-form-item>
               <el-form-item label-width="22px" prop="agree">
                 <el-checkbox  size="large" v-model="form.agree">

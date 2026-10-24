@@ -21,7 +21,7 @@ export const findNewCartListAPI = () => {
 
 // 删除购物车
 export const delCartAPI = (ids) => {
-  return request({
+  return httpInstance({
     url: '/member/cart',
     method: 'DELETE',
     data: {
