@@ -6,10 +6,17 @@ import { insertCartAPI,findNewCartListAPI,delCartAPI } from '@/apis/cart'
 export const useCartStore = defineStore('cart', () => {
   
   const userStore = useUserStore()
+  // 登录状态计算属性
   const isLogin = computed(() => userStore.userInfo.token)
   // 1. 定义state - cartList
   const cartList = ref([])
 
+  // 更新购物车列表
+  const updateNewList = async () => {
+    const res = await findNewCartListAPI()
+    // 3. 更新购物车列表
+     cartList.value = res.result
+  }
 
   // 2. 定义action - addCart
   const addCart = async (goods) => {
@@ -35,9 +42,7 @@ export const useCartStore = defineStore('cart', () => {
       if (isLogin.value) {
         // 调用接口实现接口购物车中的删除功能
         await delCartAPI([skuId])
-        const res = await findNewCartListAPI()
-        // 3. 更新购物车列表
-        cartList.value = res.result
+        await updateNewList()
       } else {
         // 思路：
         // 1. 找到要删除项的下标值 - splice
@@ -93,7 +98,8 @@ export const useCartStore = defineStore('cart', () => {
     allCheck,
     selectedCount,
     selectedPrice,
-    clearCart
+    clearCart,
+    updateNewList
   }
 }, {
   persist: true,
