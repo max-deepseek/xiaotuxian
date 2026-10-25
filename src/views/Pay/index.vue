@@ -2,6 +2,11 @@
 import { getOrderAPI } from '@/apis/pay'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useCountDown } from '@/composables/useCountDown'
+
+// 倒计时
+const { formatTime, start } = useCountDown()
+
 // 获取订单数据
 const route = useRoute()
 const payInfo = ref({})
@@ -9,13 +14,15 @@ const payInfo = ref({})
 //  scobys4865@sandbox.com
 // 支付地址
 const baseURL = 'http://pcapi-xiaotuxian-front-devtest.itheima.net/'
-const backURL = 'http://localhost:5174/#/paycallback'
+const backURL = 'http://localhost:5173/paycallback'
 const redirectUrl = encodeURIComponent(backURL)
 const payUrl = `${baseURL}pay/aliPay?orderId=${route.query.id}&redirect=${redirectUrl}`
 
 const getPayInfo = async () => {
   const res = await getOrderAPI(route.query.id)
   payInfo.value = res.result
+  // 初始化倒计时
+  start(payInfo.value.countDown ?? 0)
 }
 onMounted(() => getPayInfo())
 

@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/views/Layout/index.vue'
 import Home from '@/views/Home/index.vue'
 import Category from '@/views/Category/index.vue'
@@ -9,9 +9,13 @@ import CartList from '@/views/CartList/index.vue'
 import CheckOut from '@/views/CheckOut/index.vue'
 import Pay from '@/views/Pay/index.vue'
 import PayBack from '@/views/PayBack/index.vue'
+import Member from '@/views/Member/index.vue'
+import UserOrder from '@/views/Member/components/UserOrder.vue'
+import UserInfo from '@/views/Member/components/UserInfo.vue'
+
 
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -57,6 +61,23 @@ const router = createRouter({
           path: 'paycallback',
           name:'paycallback',
           component:PayBack
+        },
+        {
+          path: 'member',
+          name:'member',
+          component:Member,
+          children:[
+            {
+              path: 'order',
+              name:'order',
+              component:UserOrder
+            },
+            {
+              path: 'user',
+              name:'user',
+              component:UserInfo
+            }
+          ]
         }
       ]
     },
@@ -65,7 +86,7 @@ const router = createRouter({
       name: 'login',
       component: Login
     },
-
+    
   ],
   scrollBehavior () {
     return {
