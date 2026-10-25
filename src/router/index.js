@@ -73,7 +73,7 @@ const router = createRouter({
               component:UserOrder
             },
             {
-              path: 'user',
+              path: '',
               name:'user',
               component:UserInfo
             }
