@@ -1,18 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/views/Layout/index.vue'
-import Home from '@/views/Home/index.vue'
-import Category from '@/views/Category/index.vue'
-import Login from '@/views/Login/index.vue'
-import SubCategory from '@/views/subCategory/index.vue'
-import Detail from '@/views/Detail/index.vue'
-import CartList from '@/views/CartList/index.vue'
-import CheckOut from '@/views/CheckOut/index.vue'
-import Pay from '@/views/Pay/index.vue'
-import PayBack from '@/views/PayBack/index.vue'
-import Member from '@/views/Member/index.vue'
-import UserOrder from '@/views/Member/components/UserOrder.vue'
-import UserInfo from '@/views/Member/components/UserInfo.vue'
-
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,57 +12,57 @@ const router = createRouter({
         {
           path: '',
           name: 'home',
-          component: Home
+          component: () => import('@/views/Home/index.vue')
         },
         {
           path: 'category/:id',
           name: 'category',
-          component: Category
+          component: () => import('@/views/Category/index.vue')
         },
         {
           path: 'category/sub/:id',
           name: 'subCategory',
-          component: SubCategory
+          component: () => import('@/views/subCategory/index.vue')
         },
         {
           path: 'detail/:id',
           name:'detail',
-          component:Detail
+          component: () => import('@/views/Detail/index.vue')
         },
         {
           path: 'cartlist',
           name:'cartlist',
-          component:CartList
+          component: () => import('@/views/CartList/index.vue')
         },
         {
           path: 'checkout',
           name:'checkout',
-          component:CheckOut
+          component: () => import('@/views/CheckOut/index.vue')
         },
         {
           path: 'pay',
           name:'pay',
-          component:Pay
+          component: () => import('@/views/Pay/index.vue')
         },
         {
           path: 'paycallback',
           name:'paycallback',
-          component:PayBack
+          component: () => import('@/views/PayBack/index.vue')
         },
         {
           path: 'member',
           name:'member',
-          component:Member,
-          children:[
+          component: () => import('@/views/Member/index.vue'),
+          children: [
             {
               path: 'order',
               name:'order',
-              component:UserOrder
+              component: () => import('@/views/Member/components/UserOrder.vue')
             },
             {
               path: '',
               name:'user',
-              component:UserInfo
+              component: () => import('@/views/Member/components/UserInfo.vue')
             }
           ]
         }
@@ -84,7 +71,7 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: () => import('@/views/Login/index.vue')
     },
     
   ],
@@ -94,5 +81,4 @@ const router = createRouter({
     }
   }
 })
-
 export default router
