@@ -7,7 +7,7 @@ import router from '@/router/index'
 // 创建axios实例
 const httpInstance = axios.create({
   baseURL: '/api',
-  timeout: 5000
+  timeout: 50000 // 全局超时时间
 })
 
 
