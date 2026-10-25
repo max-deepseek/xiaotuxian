@@ -32,6 +32,12 @@ const tabChange = (type) => {
   getOrderList()
  }
 
+ // 分页切换
+ const pageChange = (page) => {
+  params.value.page = page
+  getOrderList()
+ }
+
 onMounted(() => getOrderList())
 </script>
 
@@ -114,7 +120,7 @@ onMounted(() => getOrderList())
           </div>
           <!-- 分页 -->
           <div class="pagination-container">
-            <el-pagination background layout="prev, pager, next" />
+            <el-pagination :total="total" :page-size="params.pageSize" @current-change="pageChange" background layout="prev, pager, next" />
           </div>
         </div>
       </div>
