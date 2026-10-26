@@ -1,38 +1,33 @@
-# rabbit
+# 小兔鲜儿电商项目
+> Vue3 + Vite 移动端电商实战项目
 
-This template should help get you started developing with Vue 3 in Vite.
+## 📌 项目介绍
+小兔鲜儿是一个 B2C 移动端电商网站，包含首页、商品分类、商品详情、购物车、结算下单、支付、个人中心订单等完整电商业务流程。
+本项目为前端独立开发实战项目，适合简历展示。
 
-## Recommended IDE Setup
+## 🛠 技术栈
+- Vue3 组合式 API + `<script setup>`
+- Vite 构建工具
+- Pinia 状态管理（购物车模块持久化、登录状态管理）
+- Vue Router 路由管理
+- Element Plus UI 组件库
+- Axios 请求封装 + 请求/响应拦截器（Token鉴权、401登录失效处理）
+- SCSS 样式开发
+- Git 版本管理
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## ✨ 功能模块
+- ✅ 首页：轮播图、商品推荐
+- ✅ 商品分类、二级分类筛选
+- ✅ 商品详情页：规格选择、加入购物车
+- ✅ 购物车：商品单选/全选、数量修改、删除商品
+- ✅ 登录功能，登录后合并本地购物车到服务端购物车
+- ✅ 结算页：收货地址切换、订单提交
+- ✅ 支付页面、支付回调
+- ✅ 个人中心：查看我的订单
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+## 🚀 项目启动
+```bash
+# 安装依赖
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+# 启动开发服务
 npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
