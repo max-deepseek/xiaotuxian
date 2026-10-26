@@ -23,7 +23,6 @@
       </div>
       <!-- 头部购物车 -->
        <HeaderCart />
-      
     </div>
   </header>
 </template>
