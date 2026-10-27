@@ -8,24 +8,37 @@ export const useCountDown = () => {
   const time = ref(0)
   // 格式化时间 为 xx分xx秒
   const formatTime = computed(() => dayjs.unix(time.value).format('mm分ss秒'))
+
+  const stop = () => {
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
+  }
+
   // 开启倒计时的函数
   const start = (currentTime) => {
     // 开始倒计时的逻辑
     // 核心逻辑：每s减1
+    stop()
     time.value = currentTime
     timer = setInterval(() => {
-      time.value--
+      time.value = Math.max(0, time.value - 1)
+      if (time.value === 0) {
+        stop()
+      }
     }, 1000)
   }
-    // 组件销毁时，清除定时器
-    onUnmounted(() => {
-      timer && clearInterval(timer)
-    })
-    return {
-      formatTime,
-      start
-    }
-    
+
+  // 组件销毁时，清除定时器
+  onUnmounted(stop)
+
+  return {
+    time,
+    formatTime,
+    start,
+    stop
   }
+}
 
 

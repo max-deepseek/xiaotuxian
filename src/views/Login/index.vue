@@ -1,56 +1,124 @@
 <script setup>
-  import {ref} from 'vue'
-  import { useRouter } from 'vue-router'
-  import { useUserStore } from '@/stores/user'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { getLoginCodeAPI } from '@/apis/user'
+import { useCountDown } from '@/composables/useCountDown'
 
-
-  const userInf0 = useUserStore()
-  
-  const form = ref({
-    account: 'xiaotuxian001',
-    password: '123456',
-    agree: true
-  })
-
-  const rules = {
-  account: [
-    { required: true, message: '用户名不能为空' }
-  ],
-  password: [
-    { required: true, message: '密码不能为空' },
-    { min: 6, max: 24, message: '密码长度要求6-14个字符' }
-  ],
-   agree: [
-     {
-       validator: (rule, val, callback) => {
-         if(val){
-          callback()
-         }else {
-          callback(new Error('请勾选协议'))
-         }
-       }
-     }
-   ]
-  }
-
-  // 3. 获取form实例做统一校验
-const formRef = ref(null)
+const userStore = useUserStore()
 const router = useRouter()
-const doLogin = () => {
-  const {account,password} = form.value
-  // 调用实例方法
-  formRef.value.validate( async(valid) => {
-    console.log(valid)
-    // valid: 所有表单都通过校验 才为true
-    if(valid){
-      await userInf0.getUserInfo({account,password})
-      ElMessage({ type:"success",message:'登录成功'})
-      // 跳转
-      router.replace({ path: '/' })
+const loginType = ref('account')
+const formRef = ref(null)
+const submitting = ref(false)
+const sendingCode = ref(false)
+const { time: countdown, start: startCountdown } = useCountDown()
+
+const form = ref({
+  account: 'xiaotuxian001',
+  password: '123456',
+  mobile: '13888888888',
+  code: '',
+  agree: true
+})
+
+const codeButtonText = computed(() => {
+  return countdown.value > 0 ? `${countdown.value}s后重发` : '获取验证码'
+})
+
+const rules = computed(() => ({
+  ...(loginType.value === 'account'
+    ? {
+        account: [{ required: true, message: '用户名不能为空' }],
+        password: [
+          { required: true, message: '密码不能为空' },
+          { min: 6, max: 24, message: '密码长度要求6-24个字符' }
+        ]
+      }
+    : {
+        mobile: [
+          { required: true, message: '手机号不能为空' },
+          { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }
+        ],
+        code: [
+          { required: true, message: '验证码不能为空' },
+          { pattern: /^\d{6}$/, message: '请输入6位数字验证码' }
+        ]
+      }),
+  agree: [
+    {
+      validator: (rule, value, callback) => {
+        if (value) {
+          callback()
+        } else {
+          callback(new Error('请勾选协议'))
+        }
+      }
     }
-  })
+  ]
+}))
+
+const switchLoginType = (type) => {
+  loginType.value = type
+  formRef.value?.clearValidate()
 }
 
+const sendCode = async () => {
+  if (countdown.value > 0 || sendingCode.value) return
+
+  try {
+    await formRef.value.validateField('mobile')
+  } catch {
+    return
+  }
+
+  sendingCode.value = true
+  try {
+    const res = await getLoginCodeAPI(form.value.mobile)
+    if (res.code !== '1') {
+      ElMessage.warning(res.msg || '验证码发送失败')
+      return
+    }
+    startCountdown(60)
+    ElMessage.success('验证码已发送，默认验证码为 123456')
+  } catch {
+    // 请求错误由 HTTP 响应拦截器统一提示
+  } finally {
+    sendingCode.value = false
+  }
+}
+
+const doLogin = async () => {
+  if (submitting.value) return
+
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
+
+  submitting.value = true
+  try {
+    if (loginType.value === 'account') {
+      await userStore.getUserInfo({
+        account: form.value.account,
+        password: form.value.password
+      })
+    } else {
+      await userStore.getUserInfoByCode({
+        mobile: form.value.mobile,
+        code: form.value.code
+      })
+    }
+    ElMessage.success('登录成功')
+    router.replace({ path: '/' })
+  } catch (error) {
+    if (error?.isBusinessError) {
+      ElMessage.error(error.message)
+    }
+  } finally {
+    submitting.value = false
+  }
+}
 </script>
 
 
@@ -71,24 +139,88 @@ const doLogin = () => {
     <section class="login-section">
       <div class="wrapper">
         <nav>
-          <a href="javascript:;">账户登录</a>
+          <a
+            href="javascript:;"
+            :class="{ active: loginType === 'account' }"
+            @click="switchLoginType('account')"
+          >
+            账户登录
+          </a>
+          <a
+            href="javascript:;"
+            :class="{ active: loginType === 'code' }"
+            @click="switchLoginType('code')"
+          >
+            手机验证码登录
+          </a>
         </nav>
         <div class="account-box">
           <div class="form">
-            <el-form ref='formRef' :model="form" :rules="rules" label-position="right" label-width="60px"
-              status-icon>
-              <el-form-item prop="account" label="账户">
-                <el-input v-model="form.account" placeholder="xiaotuxian001"/>
-              </el-form-item>
-              <el-form-item prop="password" label="密码">
-                <el-input v-model="form.password" placeholder="123456"/>
-              </el-form-item>
+            <el-form
+              ref="formRef"
+              :model="form"
+              :rules="rules"
+              label-position="right"
+              label-width="68px"
+              status-icon
+              @keyup.enter="doLogin"
+            >
+              <template v-if="loginType === 'account'">
+                <el-form-item prop="account" label="账户">
+                  <el-input v-model="form.account" placeholder="xiaotuxian001" />
+                </el-form-item>
+                <el-form-item prop="password" label="密码">
+                  <el-input
+                    v-model="form.password"
+                    type="password"
+                    show-password
+                    placeholder="123456"
+                  />
+                </el-form-item>
+              </template>
+              <template v-else>
+                <el-form-item prop="mobile" label="手机号">
+                  <el-input
+                    v-model="form.mobile"
+                    maxlength="11"
+                    inputmode="numeric"
+                    placeholder="请输入手机号"
+                  />
+                </el-form-item>
+                <el-form-item prop="code" label="验证码">
+                  <el-input
+                    v-model="form.code"
+                    maxlength="6"
+                    inputmode="numeric"
+                    placeholder="123456"
+                  >
+                    <template #append>
+                      <el-button
+                        class="code-btn"
+                        native-type="button"
+                        :loading="sendingCode"
+                        :disabled="countdown > 0"
+                        @click="sendCode"
+                      >
+                        {{ codeButtonText }}
+                      </el-button>
+                    </template>
+                  </el-input>
+                </el-form-item>
+              </template>
               <el-form-item label-width="22px" prop="agree">
-                <el-checkbox  size="large" v-model="form.agree">
+                <el-checkbox size="large" v-model="form.agree">
                   我已同意隐私条款和服务条款
                 </el-checkbox>
-              </el-form-item >
-              <el-button size="large" class="subBtn" @click="doLogin">点击登录</el-button>
+              </el-form-item>
+              <el-button
+                size="large"
+                class="subBtn"
+                :loading="submitting"
+                @click="doLogin"
+              >
+                登录
+              </el-button>
             </el-form>
           </div>
         </div>
@@ -188,6 +320,21 @@ const doLogin = () => {
         font-size: 18px;
         position: relative;
         text-align: center;
+        color: #999;
+
+        &.active {
+          color: $xtxColor;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 24px;
+            bottom: -18px;
+            left: 24px;
+            height: 2px;
+            background: $xtxColor;
+          }
+        }
       }
     }
   }
@@ -315,6 +462,20 @@ const doLogin = () => {
       &.disabled {
         background: #cfcdcd;
       }
+    }
+
+    :deep(.el-input-group__append) {
+      padding: 0;
+    }
+
+    .code-btn {
+      width: 92px;
+      height: 32px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: $xtxColor;
+      font-size: 13px;
     }
   }
 
