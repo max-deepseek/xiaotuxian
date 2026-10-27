@@ -1,7 +1,31 @@
 <script setup>
-  import {useCategoryStore} from '@/stores/category'
-  import HeaderCart from './HeaderCart.vue';
-  const CategoryStore = useCategoryStore()
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCategoryStore } from '@/stores/category'
+import HeaderCart from './HeaderCart.vue'
+
+const CategoryStore = useCategoryStore()
+const route = useRoute()
+const router = useRouter()
+const searchText = ref('')
+
+watch(() => route.query.keyword, (value) => {
+  if (route.name === 'search') {
+    searchText.value = String(value || '')
+  }
+}, { immediate: true })
+
+const search = () => {
+  const keyword = searchText.value.trim()
+  if (!keyword) {
+    ElMessage.warning('请输入搜索关键词')
+    return
+  }
+  router.push({
+    path: '/search',
+    query: { keyword }
+  })
+}
 </script>
 
 <template>
@@ -18,8 +42,15 @@
         </li>
       </ul>
       <div class="search">
-        <i class="iconfont icon-search"></i>
-        <input type="text" placeholder="搜一搜">
+        <i class="iconfont icon-search" @click="search"></i>
+        <input
+          v-model="searchText"
+          type="text"
+          placeholder="搜一搜"
+          aria-label="搜索商品"
+          @keyup.enter="search"
+        >
+        <button type="button" @click="search">搜索</button>
       </div>
       <!-- 头部购物车 -->
        <HeaderCart />
@@ -81,21 +112,37 @@
   }
 
   .search {
-    width: 170px;
+    width: 210px;
     height: 32px;
     position: relative;
     border-bottom: 1px solid #e7e7e7;
     line-height: 32px;
+    display: flex;
+    align-items: center;
 
     .icon-search {
       font-size: 18px;
       margin-left: 5px;
+      cursor: pointer;
     }
 
     input {
-      width: 140px;
+      flex: 1;
+      min-width: 0;
       padding-left: 5px;
       color: #666;
+    }
+
+    button {
+      width: 42px;
+      height: 26px;
+      margin-right: 2px;
+      border: 0;
+      border-radius: 3px;
+      background: $xtxColor;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
     }
   }
 

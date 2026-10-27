@@ -11,6 +11,16 @@ export const getDetail = (id) => {
 }
 
 /**
+ * 获取指定 SKU 的最新价格和库存
+ * @param {string|number} id SKU id
+ */
+export const getGoodsStockAPI = (id) => {
+  return httpInstance({
+    url: `/goods/stock/${id}`
+  })
+}
+
+/**
  * 获取热榜商品
  * @param {Number} id - 商品id
  * @param {Number} type - 1代表24小时热销榜 2代表周热销榜

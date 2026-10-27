@@ -39,6 +39,20 @@ export const getHotAPI = () => {
 }
 
 /**
+ * @description: 获取热门品牌
+ * @param {*} limit 品牌数量
+ * @return {*}
+ */
+export const getBrandAPI = (limit = 10) => {
+  return httpInstance({
+    url: '/home/brand',
+    params: {
+      limit
+    }
+  })
+}
+
+/**
  * @description: 获取所有商品模块
  * @param {*}
  * @return {*}

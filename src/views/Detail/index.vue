@@ -1,6 +1,6 @@
 <script setup>
-import { getDetail } from '@/apis/detail'
-import { onMounted, ref } from 'vue'
+import { getDetail, getGoodsStockAPI } from '@/apis/detail'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 // ✅ 导入热榜组件
 import DetailHot from './components/DetailHot.vue'
@@ -17,41 +17,115 @@ const getGoods = async () => {
 onMounted(() => getGoods())
 
 // sku规格被操作时
-let skuObj = {}
-const skuChange = (sku) => {
-  skuObj = sku
-}
+const skuObj = ref({})
+const stockInfo = ref({})
+const stockLoading = ref(false)
+const stockError = ref(false)
+let stockRequestId = 0
 
+const skuChange = async (sku) => {
+  skuObj.value = sku
+  stockInfo.value = {}
+  stockError.value = false
 
-// count
-const count = ref(1)
-const countChange = (count) => {
-  console.log(count)
-}
+  const currentRequest = ++stockRequestId
+  if (!sku.skuId) {
+    stockLoading.value = false
+    return
+  }
 
-// 添加购物车
-const addCart = () => {
-  if (skuObj.skuId) {
-    // 规则已经选择 触发action
-    cartStore.addCart({
-      id: goods.value.id,
-      name: goods.value.name,
-      picture: goods.value.mainPictures[0],
-      price: goods.value.price,
-      count: count.value,
-      skuId: skuObj.skuId,
-      attrsText: skuObj.specsText,
-      selected: true
-    })
-  } else {
-    // 规格没有选择 提示用户
-    ElMessage.warning('请选择规格')
+  stockLoading.value = true
+  try {
+    const res = await getGoodsStockAPI(sku.skuId)
+    if (currentRequest !== stockRequestId) return
+
+    if (res.code === '1') {
+      stockInfo.value = res.result
+      if (res.result.stock > 0 && count.value > res.result.stock) {
+        count.value = res.result.stock
+      }
+    } else {
+      stockError.value = true
+    }
+  } catch {
+    // 请求错误由 HTTP 响应拦截器统一提示
+    if (currentRequest === stockRequestId) {
+      stockError.value = true
+    }
+  } finally {
+    if (currentRequest === stockRequestId) {
+      stockLoading.value = false
+    }
   }
 }
 
-console.log('cartStore', cartStore)
+// count
+const count = ref(1)
+const countChange = (value) => {
+  const stock = stockInfo.value.stock
+  if (Number.isFinite(stock) && value > stock) {
+    count.value = Math.max(stock, 1)
+    ElMessage.warning(`当前库存仅剩 ${stock} 件`)
+  }
+}
 
+const displayStock = computed(() => {
+  return stockInfo.value.stock ?? skuObj.value.inventory
+})
 
+const currentPrice = computed(() => {
+  return stockInfo.value.nowPrice ?? skuObj.value.price ?? goods.value.price
+})
+
+const currentOldPrice = computed(() => {
+  return stockInfo.value.oldPrice ?? skuObj.value.oldPrice ?? goods.value.oldPrice
+})
+
+// 添加购物车
+const addCart = () => {
+  if (!skuObj.value.skuId) {
+    // 规格没有选择 提示用户
+    ElMessage.warning('请选择规格')
+    return
+  }
+
+  if (stockLoading.value) {
+    ElMessage.warning('正在查询库存，请稍候')
+    return
+  }
+
+  if (stockError.value) {
+    ElMessage.warning('库存查询失败，请稍后重试')
+    return
+  }
+
+  if (stockInfo.value.isEffective === false) {
+    ElMessage.warning('当前规格已失效，请选择其他规格')
+    return
+  }
+
+  if (stockInfo.value.stock === 0) {
+    ElMessage.warning('当前规格暂时无货')
+    return
+  }
+
+  if (stockInfo.value.stock && count.value > stockInfo.value.stock) {
+    ElMessage.warning(`当前库存仅剩 ${stockInfo.value.stock} 件`)
+    return
+  }
+
+  // 规格已选择且库存可用，触发购物车 action
+  cartStore.addCart({
+    id: goods.value.id,
+    name: goods.value.name,
+    picture: goods.value.mainPictures[0],
+    price: currentPrice.value,
+    count: count.value,
+    skuId: skuObj.value.skuId,
+    attrsText: skuObj.value.specsText,
+    selected: true
+  })
+}
 </script>
 
 <template>
@@ -111,8 +185,8 @@ console.log('cartStore', cartStore)
               <p class="g-name"> {{ goods.name }} </p>
               <p class="g-desc">{{ goods.desc }} </p>
               <p class="g-price">
-                <span>{{ goods.oldPrice }}</span>
-                <span> {{ goods.price }}</span>
+                <span>{{ currentPrice }}</span>
+                <span v-if="currentOldPrice">{{ currentOldPrice }}</span>
               </p>
               <div class="g-service">
                 <dl>
@@ -131,11 +205,29 @@ console.log('cartStore', cartStore)
               </div>
               <!-- sku组件 -->
               <XtxSku :goods="goods" @change="skuChange"/>
+              <div class="stock-info" v-if="skuObj.skuId">
+                <span v-if="stockLoading">正在查询库存...</span>
+                <span v-else-if="stockError" class="empty">库存查询失败，请稍后重试</span>
+                <span v-else-if="stockInfo.isEffective === false" class="empty">该规格已失效</span>
+                <span v-else-if="displayStock === 0" class="empty">该规格暂时无货</span>
+                <span v-else>库存 {{ displayStock }} 件</span>
+              </div>
               <!-- 数据组件 -->
-              <el-input-number v-model="count" @change="countChange" />
+              <el-input-number
+                v-model="count"
+                :min="1"
+                :max="displayStock > 0 ? displayStock : undefined"
+                :disabled="!skuObj.skuId || stockLoading || stockError || displayStock === 0 || stockInfo.isEffective === false"
+                @change="countChange"
+              />
               <!-- 按钮组件 -->
               <div>
-                <el-button size="large" class="btn" @click="addCart">
+                <el-button
+                  size="large"
+                  class="btn"
+                  :disabled="stockLoading || stockError || displayStock === 0 || stockInfo.isEffective === false"
+                  @click="addCart"
+                >
                   加入购物车
                 </el-button>
               </div>
@@ -300,6 +392,16 @@ console.log('cartStore', cartStore)
           }
         }
       }
+    }
+  }
+
+  .stock-info {
+    margin-top: 12px;
+    color: #666;
+    font-size: 14px;
+
+    .empty {
+      color: $priceColor;
     }
   }
 
