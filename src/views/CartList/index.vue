@@ -1,16 +1,46 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：购物车列表的商品勾选、数量修改、删除与结算入口。
+ * 关键内容：单选、数量输入和全选操作交给 cartStore 判断登录状态，
+ * 登录后调用服务端接口，未登录时更新本地购物车。
+ * 完成者：AI（Codex）
+ */
 import { useCartStore } from '@/stores/cartStore'
 const cartStore = useCartStore()
 
-// 单选回调
-const singleCheck = (i, selected) => {
-  // store cartList 数组 无法知道要修改谁的选中状态？
-  // 除了selected补充一个用来筛选的参数 - skuId
-  cartStore.singleCheck(i.skuId, selected)
+// [AI] 业务状态码错误直接提示；网络错误已由 HTTP 拦截器提示
+const showBusinessError = (error) => {
+  if (error?.isBusinessError) {
+    ElMessage.error(error.message)
+  }
 }
 
-const allCheck = (selected) => {
-  cartStore.allCheck(selected)
+// [AI] 单选回调：接口失败时 store 会恢复服务端最新列表
+const singleCheck = async (item, selected) => {
+  try {
+    await cartStore.singleCheck(item.skuId, selected)
+  } catch (error) {
+    showBusinessError(error)
+  }
+}
+
+// [AI] 全选/取消全选回调
+const allCheck = async (selected) => {
+  try {
+    await cartStore.allCheck(selected)
+  } catch (error) {
+    showBusinessError(error)
+  }
+}
+
+// [AI] 数量修改回调：v-model 先更新视图，@change 再同步服务端
+const countChange = async (item, count) => {
+  try {
+    await cartStore.updateCount(item.skuId, count)
+  } catch (error) {
+    showBusinessError(error)
+  }
 }
 </script>
 
@@ -52,7 +82,12 @@ const allCheck = (selected) => {
                 <p>&yen;{{ i.price }}</p>
               </td>
               <td class="tc">
-                <el-input-number v-model="i.count" />
+                <el-input-number
+                  v-model="i.count"
+                  :min="1"
+                  :max="i.stock || undefined"
+                  @change="(count) => countChange(i, count)"
+                />
               </td>
               <td class="tc">
                 <p class="f16 red">&yen;{{ (i.price * i.count).toFixed(2) }}</p>

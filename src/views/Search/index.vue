@@ -1,4 +1,14 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：商品搜索结果页。
+ * 关键内容：
+ * 1. 调用 POST /search/all 完成关键词搜索；
+ * 2. 支持综合、最新、销量、人气、价格升降序和分页；
+ * 3. 使用 requestId 防止慢请求覆盖新结果；
+ * 4. 搜索服务异常时展示明确错误状态。
+ * 完成者：AI（Codex）
+ */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { searchGoodsAPI } from '@/apis/search'
@@ -25,6 +35,7 @@ const sortOptions = [
 const isDefaultSort = computed(() => !sortField.value)
 const isPriceSort = computed(() => sortField.value === 'price')
 
+// [AI] 按当前关键词、排序和页码获取结果，并忽略过期请求
 const getSearchResult = async () => {
   if (!keyword.value) {
     requestId++

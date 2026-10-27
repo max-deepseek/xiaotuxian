@@ -1,4 +1,14 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：商品详情页和 SKU 选择。
+ * 关键内容：
+ * 1. AI 新增选择规格后的库存查询；
+ * 2. 将最新价格、库存和有效性同步到页面；
+ * 3. 限制购买数量，阻止失效、缺货或库存查询失败时加入购物车；
+ * 4. 使用请求序号避免快速切换规格时旧库存覆盖新规格。
+ * 完成者：AI（Codex）
+ */
 import { getDetail, getGoodsStockAPI } from '@/apis/detail'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -23,6 +33,7 @@ const stockLoading = ref(false)
 const stockError = ref(false)
 let stockRequestId = 0
 
+// [AI] 规格变化时查询最新库存，只接收当前 SKU 对应的响应
 const skuChange = async (sku) => {
   skuObj.value = sku
   stockInfo.value = {}

@@ -1,4 +1,10 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：首页热门品牌展示。
+ * 关键内容：调用热门品牌接口，处理加载中、加载失败和空列表状态。
+ * 完成者：AI（Codex）
+ */
 import { onMounted, ref } from 'vue'
 import { getBrandAPI } from '@/apis/home'
 import HomePanel from './HomePanel.vue'
@@ -7,6 +13,7 @@ const brandList = ref([])
 const loading = ref(true)
 const loadFailed = ref(false)
 
+// [AI] 获取10个热门品牌，业务状态不是1时展示失败状态
 const getBrandList = async () => {
   try {
     const res = await getBrandAPI(10)

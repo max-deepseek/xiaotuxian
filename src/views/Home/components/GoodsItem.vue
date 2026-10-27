@@ -1,5 +1,11 @@
 
 <script setup>
+/**
+ * [AI 修改说明]
+ * 功能：首页、分类和搜索页复用的商品卡片。
+ * 关键内容：AI 将商品卡片链接修正为对应 /detail/{id} 详情页。
+ * 完成者：AI（Codex）
+ */
 defineProps({
   goods: {
     type: Object,

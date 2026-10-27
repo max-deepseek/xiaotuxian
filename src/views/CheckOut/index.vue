@@ -1,58 +1,100 @@
 <script setup>
-import { getCheckoutInfoAPI,createOrderAPI } from '@/apis/checkout'
-import { onMounted,ref } from 'vue'
+/**
+ * [AI 完成说明]
+ * 功能：结算页展示并切换收货地址，支持新增地址入口。
+ * 关键内容：
+ * 1. 使用 GET /member/address 获取最新地址列表；
+ * 2. 优先选择 isDefault=0 的默认地址；
+ * 3. 新增地址复用 AddressDialog，保存成功后自动刷新并选中；
+ * 4. 没有收货地址时禁止提交订单。
+ * 完成者：AI（Codex）
+ */
+import { getCheckoutInfoAPI, createOrderAPI } from '@/apis/checkout'
+import { getAddressListAPI } from '@/apis/address'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {useCartStore} from '@/stores/cartStore'
+import { useCartStore } from '@/stores/cartStore'
+import AddressDialog from '@/components/AddressDialog.vue'
 
-
-const checkInfo = ref({})  // 订单对象
-const curAddress = ref({})   // 地址对象
-const showDialog = ref(false)  // 切换地址弹窗是否显示
-const activeAddress = ref({}) // 切换地址弹窗当前选中的地址
+const checkInfo = ref({})
+const curAddress = ref({})
+const showDialog = ref(false)
+const activeAddress = ref({})
+const addressList = ref([])
+const showAddressDialog = ref(false)
+const editingAddress = ref(null)
 const router = useRouter()
 const cartStore = useCartStore()
 
-// 初始数据填充
+// [AI] 并行获取结算信息和独立地址列表，优先选中默认地址
 const getCheckoutInfo = async () => {
-  const res = await getCheckoutInfoAPI()
-  checkInfo.value = res.result
-  // const item = checkInfo.value.userAddresses.find(i => i.isDefault === 0) 
-  const item = checkInfo.value.userAddresses[0]
+  const [checkoutRes, addressRes] = await Promise.all([
+    getCheckoutInfoAPI(),
+    getAddressListAPI().catch(() => null)
+  ])
+  checkInfo.value = checkoutRes.result
+  addressList.value = addressRes?.code === '1'
+    ? addressRes.result
+    : checkoutRes.result.userAddresses
+
+  const item = addressList.value.find(i => i.isDefault === 0) || addressList.value[0]
   curAddress.value = item || {}
   activeAddress.value = curAddress.value
 }
 
-// 切换地址
-
+// [AI] 切换地址弹窗中的临时选中项
 const switchAddress = (item) => {
   activeAddress.value = item
 }
 
-// 确认切换地址
- const confirmSwitchAddress = () => {
+// [AI] 确认切换地址，只影响本次订单使用的 addressId
+const confirmSwitchAddress = () => {
   curAddress.value = activeAddress.value
   showDialog.value = false
- }
+}
 
- // 取消切换地址
- const cancelSwitchAddress = () => {
+// [AI] 取消切换，不改变当前结算地址
+const cancelSwitchAddress = () => {
   showDialog.value = false
- }
+}
 
- const createOrder = async () => {
+// [AI] 打开新增地址弹窗
+const openAddAddress = () => {
+  editingAddress.value = null
+  showAddressDialog.value = true
+}
+
+// [AI] 新增成功后重新拉取地址，并优先选中默认地址
+const handleAddressSaved = async (savedAddressId) => {
+  const res = await getAddressListAPI()
+  if (res.code !== '1') return
+
+  addressList.value = res.result
+  const item = addressList.value.find(i => i.id === savedAddressId) ||
+    addressList.value.find(i => i.isDefault === 0) ||
+    addressList.value[0]
+  curAddress.value = item || {}
+  activeAddress.value = curAddress.value
+}
+
+const createOrder = async () => {
+  if (!curAddress.value.id) {
+    ElMessage.warning('请先添加收货地址')
+    return
+  }
+
   const res = await createOrderAPI({
     deliveryTimeType: 1,
     payType: 1,
     payChannel: 1,
     buyerMessage: '',
-    goods: checkInfo.value.goods.map(i =>  {
-      return {
-        skuId:  i.skuId,
-        count: i.count
-      }
-    }),
+    goods: checkInfo.value.goods.map(i => ({
+      skuId: i.skuId,
+      count: i.count
+    })),
     addressId: curAddress.value.id
   })
+
   const orderId = res.result.id
   router.push({
     path: '/pay',
@@ -60,18 +102,10 @@ const switchAddress = (item) => {
       id: orderId
     }
   })
-  // 更新购物车数据
   cartStore.updateNewList()
- }
+}
 
- 
-
-onMounted(() => {
-  getCheckoutInfo()
-})
-
-
-
+onMounted(getCheckoutInfo)
 </script>
 
 <template>
@@ -83,7 +117,7 @@ onMounted(() => {
         <div class="box-body">
           <div class="address">
             <div class="text">
-              <div class="none" v-if="!curAddress">您需要先添加收货地址才可提交订单。</div>
+              <div class="none" v-if="!curAddress.id">您需要先添加收货地址才可提交订单。</div>
               <ul v-else>
                 <li><span>收<i />货<i />人：</span>{{ curAddress.receiver }}</li>
                 <li><span>联系方式：</span>{{ curAddress.contact }}</li>
@@ -91,8 +125,8 @@ onMounted(() => {
               </ul>
             </div>
             <div class="action">
-              <el-button size="large" @click="showDialog = true" >切换地址</el-button>
-              <el-button size="large" @click="addFlag = true">添加地址</el-button>
+              <el-button size="large" @click="showDialog = true">切换地址</el-button>
+              <el-button size="large" @click="openAddAddress">添加地址</el-button>
             </div>
           </div>
         </div>
@@ -173,23 +207,40 @@ onMounted(() => {
   </div>
   <!-- 切换地址 -->
   <el-dialog v-model="showDialog" title="切换收货地址" width="30%" center>
-  <div class="addressWrapper">
-    <div class="text item" @click="switchAddress(item)" :class="{'active': item.id === activeAddress.id}" v-for="item in checkInfo.userAddresses"  :key="item.id">
-      <ul>
-      <li><span>收<i />货<i />人：</span>{{ item.receiver }} </li>
-      <li><span>联系方式：</span>{{ item.contact }}</li>
-      <li><span>收货地址：</span>{{ item.fullLocation + item.address }}</li>
-      </ul>
+    <el-empty v-if="!addressList.length" description="暂无收货地址">
+      <el-button type="primary" @click="showDialog = false; openAddAddress()">
+        添加地址
+      </el-button>
+    </el-empty>
+    <div v-else class="addressWrapper">
+      <div
+        class="text item"
+        @click="switchAddress(item)"
+        :class="{ active: item.id === activeAddress.id }"
+        v-for="item in addressList"
+        :key="item.id"
+      >
+        <ul>
+          <li><span>收<i />货<i />人：</span>{{ item.receiver }}</li>
+          <li><span>联系方式：</span>{{ item.contact }}</li>
+          <li><span>收货地址：</span>{{ item.fullLocation }}{{ item.address }}</li>
+        </ul>
+      </div>
     </div>
-  </div>
-  <template #footer>
-    <span class="dialog-footer">
-      <el-button @click="cancelSwitchAddress">取消</el-button>
-      <el-button type="primary" @click="confirmSwitchAddress">确定</el-button>
-    </span>
-  </template>
-</el-dialog>
-  <!-- 添加地址 -->
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="cancelSwitchAddress">取消</el-button>
+        <el-button type="primary" @click="confirmSwitchAddress">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+  <!-- [AI] 新增地址弹窗，保存后自动刷新结算页地址 -->
+  <AddressDialog
+    v-model="showAddressDialog"
+    :address="editingAddress"
+    @saved="handleAddressSaved"
+  />
 </template>
 
 <style scoped lang="scss">

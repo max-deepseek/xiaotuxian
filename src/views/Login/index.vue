@@ -1,4 +1,11 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：账号密码登录与手机验证码登录双模式切换。
+ * 关键内容：AI 新增短信发送、60 秒重发倒计时、表单校验、
+ * 重复提交保护，以及两种登录方式共用的购物车合并流程。
+ * 完成者：AI（Codex）
+ */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
@@ -62,6 +69,7 @@ const switchLoginType = (type) => {
   formRef.value?.clearValidate()
 }
 
+// [AI] 发送验证码前只校验手机号，成功后启动60秒倒计时
 const sendCode = async () => {
   if (countdown.value > 0 || sendingCode.value) return
 
@@ -87,6 +95,7 @@ const sendCode = async () => {
   }
 }
 
+// [AI] 根据当前登录模式调用不同接口，成功后由 userStore 合并购物车
 const doLogin = async () => {
   if (submitting.value) return
 

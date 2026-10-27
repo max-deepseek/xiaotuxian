@@ -1,4 +1,10 @@
-// 封装倒计时逻辑函数
+/**
+ * [AI 完成说明]
+ * 功能：提供可复用的倒计时能力。
+ * 关键内容：AI 修复重复启动会创建多个计时器的问题，
+ * 并保证倒计时归零后停止、组件卸载时释放计时器。
+ * 完成者：AI（Codex）
+ */
 import { computed,onUnmounted,ref } from "vue";
 import dayjs from "dayjs";
 
@@ -9,6 +15,7 @@ export const useCountDown = () => {
   // 格式化时间 为 xx分xx秒
   const formatTime = computed(() => dayjs.unix(time.value).format('mm分ss秒'))
 
+  // [AI] 统一停止计时器，避免登录页和支付页出现多个 interval
   const stop = () => {
     if (timer) {
       clearInterval(timer)

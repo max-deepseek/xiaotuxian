@@ -1,4 +1,10 @@
-// 管理用户数据相关
+/**
+ * [AI 完成说明]
+ * 功能：管理登录用户信息，并统一处理两种登录方式成功后的购物车合并。
+ * 关键内容：AI 新增手机验证码登录、业务状态校验和购物车同步，
+ * 登录失败时回滚用户信息。
+ * 完成者：AI（Codex）
+ */
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -11,7 +17,7 @@ export const useUserStore = defineStore('user', () => {
   // 1. 定义管理用户数据的state
   const userInfo = ref({})
 
-  // 登录成功后统一合并购物车并同步服务端购物车
+  // [AI] 登录成功后统一合并购物车并同步服务端购物车
   const completeLogin = async (result) => {
     userInfo.value = result
     try {
@@ -42,7 +48,7 @@ export const useUserStore = defineStore('user', () => {
     await completeLogin(getLoginResult(res))
   }
 
-  // 手机验证码登录
+  // [AI] 手机验证码登录
   const getUserInfoByCode = async ({ mobile, code }) => {
     const res = await loginByCodeAPI({ mobile, code })
     await completeLogin(getLoginResult(res))

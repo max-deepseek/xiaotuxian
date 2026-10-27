@@ -1,7 +1,22 @@
+/**
+ * [AI 完成说明]
+ * 功能：统一管理购物车数据，并在登录状态下同步服务端购物车。
+ * 关键内容：
+ * 1. 未登录时直接修改 Pinia 本地持久化数据；
+ * 2. 登录时调用单品修改或全选接口，再拉取服务端最新列表；
+ * 3. AI 在本轮补充了数量修改、单选、全选/取消全选的服务端同步。
+ * 完成者：AI（Codex）
+ */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useUserStore } from './user'
-import { insertCartAPI,findNewCartListAPI,delCartAPI } from '@/apis/cart'
+import {
+  insertCartAPI,
+  findNewCartListAPI,
+  delCartAPI,
+  updateCartItemAPI,
+  updateAllCartAPI
+} from '@/apis/cart'
 
 export const useCartStore = defineStore('cart', () => {
   
@@ -14,8 +29,8 @@ export const useCartStore = defineStore('cart', () => {
   // 更新购物车列表
   const updateNewList = async () => {
     const res = await findNewCartListAPI()
-    // 3. 更新购物车列表
-     cartList.value = res.result
+    // [AI] 无论新增、删除、修改，最终都以服务端列表为唯一数据源
+    cartList.value = res.result
   }
 
   // 2. 定义action - addCart
@@ -52,22 +67,65 @@ export const useCartStore = defineStore('cart', () => {
       }
     }
 
-  // 单选功能
-  const singleCheck = (skuId, selected) => {
-    // 通过skuId找到要修改的那一项 然后把它的selected修改为传过来的selected
-    const item = cartList.value.find((item) => item.skuId === skuId)
-    item.selected = selected
+  /**
+   * [AI] 修改单个商品的数量或选中状态。
+   * 登录时使用 PUT /member/cart/{skuId}；未登录时直接更新本地商品。
+   */
+  const updateCart = async (skuId, data) => {
+    const item = cartList.value.find((cartItem) => cartItem.skuId === skuId)
+    if (!item) return
+
+    if (isLogin.value) {
+      const res = await updateCartItemAPI(skuId, data)
+      if (res.code !== '1') {
+        await updateNewList()
+        const error = new Error(res.msg || '购物车修改失败')
+        error.isBusinessError = true
+        throw error
+      }
+      await updateNewList()
+    } else {
+      Object.assign(item, data)
+    }
   }
 
-  // 全选功能action
-  const allCheck = (selected) => {
-    // 把cartList中的每一项的selected都设置为当前的全选框状态
-    cartList.value.forEach(item => item.selected = selected)
+  // [AI] 单选：登录后同步服务端，未登录时更新本地 selected
+  const singleCheck = (skuId, selected) => {
+    return updateCart(skuId, { selected })
+  }
+
+  // [AI] 修改数量：登录后同步服务端，避免刷新页面后数量丢失
+  const updateCount = (skuId, count) => {
+    return updateCart(skuId, { count })
+  }
+
+  // [AI] 全选/取消全选：登录时传 selected 和全部 SKU id
+  const allCheck = async (selected) => {
+    if (isLogin.value) {
+      const res = await updateAllCartAPI({
+        selected,
+        ids: cartList.value.map(item => item.skuId)
+      })
+      if (res.code !== '1') {
+        await updateNewList()
+        const error = new Error(res.msg || '购物车全选状态修改失败')
+        error.isBusinessError = true
+        throw error
+      }
+      await updateNewList()
+    } else {
+      cartList.value.forEach(item => {
+        item.selected = selected
+      })
+    }
   }
 
 
   // 是否全选计算属性
-  const isAll = computed(() => cartList.value.every((item) => item.selected))
+  // [AI] 空购物车不应被判定为“已全选”
+  const isAll = computed(() => {
+    return cartList.value.length > 0 && cartList.value.every((item) => item.selected)
+  })
 
   // 3. 已选择数量
   const selectedCount = computed(() => cartList.value.filter(item => item.selected).reduce((a, c) => a + c.count, 0))
@@ -94,6 +152,7 @@ export const useCartStore = defineStore('cart', () => {
     allCount,
     allPrice,
     singleCheck,
+    updateCount,
     isAll,
     allCheck,
     selectedCount,

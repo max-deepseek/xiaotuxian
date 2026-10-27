@@ -1,3 +1,9 @@
+/**
+ * [AI 完成说明]
+ * 功能：封装首页轮播图、新鲜好物、人气推荐、热门品牌和楼层商品接口。
+ * 关键内容：AI 新增 GET /home/brand?limit=10 热门品牌接口。
+ * 完成者：AI（Codex）
+ */
 import httpInstance from '@/utils/http'
 
 /**
@@ -39,7 +45,7 @@ export const getHotAPI = () => {
 }
 
 /**
- * @description: 获取热门品牌
+ * [AI] 获取热门品牌
  * @param {*} limit 品牌数量
  * @return {*}
  */

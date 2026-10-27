@@ -1,4 +1,11 @@
-<script setup> </script>
+<script setup>
+/**
+ * [AI 修改说明]
+ * 功能：会员中心侧边导航与三级路由容器。
+ * 关键内容：AI 新增“收货地址”入口和对应 /member/address 路由。
+ * 完成者：AI（Codex）
+ */
+</script>
 
 <template>
   <div class="container">
@@ -11,6 +18,7 @@
         <h4>交易管理</h4>
         <div class="links">
           <RouterLink to="/member/order">我的订单</RouterLink>
+          <RouterLink to="/member/address">收货地址</RouterLink>
         </div>
       </div>
     </div>

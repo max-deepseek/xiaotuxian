@@ -1,4 +1,11 @@
 <script setup>
+/**
+ * [AI 完成说明]
+ * 功能：站点顶部导航、商品搜索入口和购物车入口。
+ * 关键内容：AI 将搜索框接入 /search 页面，支持回车和按钮搜索，
+ * 并在搜索页回填当前关键词。
+ * 完成者：AI（Codex）
+ */
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCategoryStore } from '@/stores/category'
@@ -15,6 +22,7 @@ watch(() => route.query.keyword, (value) => {
   }
 }, { immediate: true })
 
+// [AI] 校验非空关键词后跳转搜索页
 const search = () => {
   const keyword = searchText.value.trim()
   if (!keyword) {

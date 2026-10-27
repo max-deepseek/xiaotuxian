@@ -1,3 +1,9 @@
+/**
+ * [AI 完成说明]
+ * 功能：封装商品详情、SKU 库存和热榜商品接口。
+ * 关键内容：AI 新增 GET /goods/stock/{id}，用于按 SKU 查询最新价格与库存。
+ * 完成者：AI（Codex）
+ */
 import httpInstance from '@/utils/http'
 
 
@@ -11,7 +17,7 @@ export const getDetail = (id) => {
 }
 
 /**
- * 获取指定 SKU 的最新价格和库存
+ * [AI] 获取指定 SKU 的最新价格和库存
  * @param {string|number} id SKU id
  */
 export const getGoodsStockAPI = (id) => {

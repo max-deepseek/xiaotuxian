@@ -1,3 +1,9 @@
+/**
+ * [AI 修改说明]
+ * 功能：项目路由配置。
+ * 关键内容：AI 新增商品搜索路由和会员中心收货地址路由。
+ * 完成者：AI（Codex）
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/views/Layout/index.vue'
 
@@ -63,6 +69,11 @@ const router = createRouter({
               path: 'order',
               name:'order',
               component: () => import('@/views/Member/components/UserOrder.vue')
+            },
+            {
+              path: 'address',
+              name: 'memberAddress',
+              component: () => import('@/views/Member/components/UserAddress.vue')
             },
             {
               path: '',

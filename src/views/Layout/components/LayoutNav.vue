@@ -1,4 +1,11 @@
 <script setup>
+/**
+ * [AI 修改说明]
+ * 功能：登录用户顶部快捷导航。
+ * 关键内容：AI 将“我的订单”“会员中心”改为可访问路由，
+ * 使收货地址管理入口可以从会员中心进入。
+ * 完成者：AI（Codex）
+ */
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import  {useCartStore}  from '@/stores/cartStore'
@@ -32,8 +39,8 @@ const confirm = () => {
               </template>
             </el-popconfirm>
           </li>
-          <li><a href="javascript:;">我的订单</a></li>
-          <li><a href="javascript:;">会员中心</a></li>
+          <li><RouterLink to="/member/order">我的订单</RouterLink></li>
+          <li><RouterLink to="/member">会员中心</RouterLink></li>
         </template>
         <template v-else>
           <li><a href="javascript:;" @click="$router.push('/login')">请先登录</a></li>
